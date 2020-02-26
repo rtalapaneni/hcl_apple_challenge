@@ -31,8 +31,8 @@ public class JSONFlagPickerRepository {
     private Resource jsonFileResource;
     @Autowired
     private ObjectMapper mapper;
-    @Autowired
-    private FlagPickerRepository repository;
+    //@Autowired
+    //private FlagPickerRepository repository;
 
     private Optional<List<Continet>> continents = Optional.empty();
 
