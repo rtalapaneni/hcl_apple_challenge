@@ -6,13 +6,17 @@ import com.tgc.challenge.flagpicker.dto.CountryDTO;
 import com.tgc.challenge.flagpicker.model.Continet;
 import com.tgc.challenge.flagpicker.model.Country;
 import com.tgc.challenge.flagpicker.repository.JSONFlagPickerRepository;
+import org.graalvm.compiler.nodes.calc.IntegerDivRemNode;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.swing.text.html.Option;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,17 +28,23 @@ public class FlagPickerService {
     @Autowired
     private JSONFlagPickerRepository repository;
 
+    private Type continentDTOTypeRef = new TypeReference<List<ContinetDTO>>() {}.getType();
+    private Type countryDTOTypeRef = new TypeReference<List<CountryDTO>>() {}.getType();
+
     /**
      * Fetches all the continents
+     *
      * @return
      */
-    public List<ContinetDTO> getAllContinents() {
-        List<ContinetDTO> continents = mapper.map(repository.getAllContinents(), new TypeToken<List<ContinetDTO>>(){}.getType());
-        return continents;
+    public Optional<List<ContinetDTO>> getAllContinents() {
+        Optional<List<Continet>> continentsEntity = repository.getAllContinents();
+        List<ContinetDTO> continentsDTO = continentsEntity.isPresent() ? mapper.map(continentsEntity.get(), continentDTOTypeRef) : null;
+        return CollectionUtils.isEmpty(continentsDTO) ? Optional.empty() : Optional.of(continentsDTO);
     }
 
     /**
      * Gives the continent details matching to provided name
+     *
      * @param continent
      * @return
      */
@@ -45,32 +55,44 @@ public class FlagPickerService {
 
     /**
      * Fetches all the countries of continent
+     *
      * @param continent
      * @return
      */
-    public List<CountryDTO> getContinentCountries(String continent) {
-        return mapper.map(repository.getContinentCountries(continent), new TypeReference<List<CountryDTO>>() {}.getType());
+    public Optional<List<CountryDTO>> getContinentCountries(String continent) {
+        Optional<List<Country>> countryEntities = repository.getContinentCountries(continent);
+
+        List<CountryDTO> countryDTOs = countryEntities.isPresent() ? mapper.map(countryEntities.get(), countryDTOTypeRef) : null;
+
+        return CollectionUtils.isEmpty(countryDTOs) ? Optional.empty() : Optional.of(countryDTOs);
     }
 
     /**
      * Fetches all the countries
+     *
      * @return
      */
-    public List<CountryDTO> getAllCountries() {
-        return mapper.map(repository.getAllCountries(), new TypeReference<List<CountryDTO>>() {}.getType());
+    public Optional<List<CountryDTO>> getAllCountries() {
+        Optional<List<Country>> countryEntities = repository.getAllCountries();
+        List<CountryDTO> countryDTOs = countryEntities.isPresent() ? mapper.map(countryEntities.get(), countryDTOTypeRef) : null;
+        return CollectionUtils.isEmpty(countryDTOs) ? Optional.empty() : Optional.of(countryDTOs);
     }
 
     /**
      * Finds all the countries for provided names
+     *
      * @param countries
      * @return
      */
-    public List<CountryDTO> findCountries(List<String> countries) {
-        return mapper.map(repository.findCountries(countries), new TypeReference<List<CountryDTO>>() {}.getType());
+    public Optional<List<CountryDTO>> findCountries(List<String> countries) {
+        Optional<List<Country>> countryEntities = repository.findCountries(countries);
+        List<CountryDTO> countryDTOs = countryEntities.isPresent() ? mapper.map(countryEntities, countryDTOTypeRef) : null;
+        return CollectionUtils.isEmpty(countryDTOs) ? Optional.empty() : Optional.of(countryDTOs);
     }
 
     /**
      * Gets the country details of the provided name
+     *
      * @param country
      * @return
      */
@@ -81,6 +103,7 @@ public class FlagPickerService {
 
     /**
      * Gives the flag of provided country
+     *
      * @param country
      * @return
      */
@@ -91,11 +114,12 @@ public class FlagPickerService {
 
     /**
      * Find flags for the provided countries
+     *
      * @param countries
      * @return
      */
-    public List<String> findCountryFlags(List<String> countries) {
-        List<Country> result = repository.findCountries(countries);
-        return result.stream().map(s -> s.getFlag()).collect(Collectors.toList());
+    public Optional<List<String>> findCountryFlags(List<String> countries) {
+        Optional<List<Country>> result = repository.findCountries(countries);
+        return result.isPresent() ? Optional.of(result.get().stream().map(s -> s.getFlag()).collect(Collectors.toList())) : Optional.empty();
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -32,7 +33,7 @@ public class JSONFlagPickerRepository {
     @Autowired
     private ObjectMapper mapper;
 
-    private List<Continet> continents = new ArrayList<>();
+    private Optional<List<Continet>> continents = Optional.empty();
 
     /**
      * Load continents data on application start
@@ -40,14 +41,15 @@ public class JSONFlagPickerRepository {
      */
     @PostConstruct
     public void init() throws IOException {
-        continents = mapper.readValue(jsonFileResource.getURL(), new TypeReference<List<Continet>>() {});
+        List<Continet> data = mapper.readValue(jsonFileResource.getURL(), new TypeReference<List<Continet>>() {});
+        continents = CollectionUtils.isEmpty(data) ? Optional.empty() : Optional.of(data);
     }
 
     /**
      * Gives all the continents data
      * @return
      */
-    public List<Continet> getAllContinents() {
+    public Optional<List<Continet>> getAllContinents() {
         return continents;
     }
 
@@ -57,7 +59,7 @@ public class JSONFlagPickerRepository {
      * @return
      */
     public Optional<Continet> getContinent(String continent) {
-        return continents.stream().filter(s -> s.getContinent().equalsIgnoreCase(continent)).findFirst();
+        return continents.isPresent() ? continents.get().stream().filter(s -> s.getContinent().equalsIgnoreCase(continent)).findFirst() : Optional.empty();
     }
 
     /**
@@ -65,17 +67,21 @@ public class JSONFlagPickerRepository {
      * @param continent
      * @return
      */
-    public List<Country> getContinentCountries(String continent) {
+    public Optional<List<Country>> getContinentCountries(String continent) {
         Optional<Continet> result = getContinent(continent);
-        return result.isPresent() ? result.get().getCountries() : new ArrayList<>();
+        List<Country> countries = result.isPresent() ? result.get().getCountries() : null;
+        return CollectionUtils.isEmpty(countries) ? Optional.empty() : Optional.of(countries);
     }
 
     /**
      * Gives all the countries of the available continents
      * @return
      */
-    public List<Country> getAllCountries() {
-        return continents.stream().flatMap(continents -> continents.getCountries().stream()).collect(Collectors.toList());
+    public Optional<List<Country>> getAllCountries() {
+
+        List<Country> countries = continents.isPresent() ? continents.get().stream().flatMap(s -> s.getCountries().stream()).collect(Collectors.toList()) : null;
+
+        return CollectionUtils.isEmpty(countries) ? Optional.empty() : Optional.of(countries);
     }
 
     /**
@@ -83,8 +89,9 @@ public class JSONFlagPickerRepository {
      * @param countries
      * @return
      */
-    public List<Country> findCountries(List<String> countries) {
-        return continents.stream().flatMap(s -> s.getCountries().stream()).filter(s -> countries.contains(s.getName())).collect(Collectors.toList());
+    public Optional<List<Country>> findCountries(List<String> countries) {
+        List<Country> countriesList = continents.isPresent() ? continents.get().stream().flatMap(s -> s.getCountries().stream()).filter(s -> countries.contains(s.getName())).collect(Collectors.toList()) : null;
+        return CollectionUtils.isEmpty(countriesList) ? Optional.empty() : Optional.of(countriesList);
     }
 
     /**
@@ -93,6 +100,6 @@ public class JSONFlagPickerRepository {
      * @return
      */
     public Optional<Country> findCountry(String country) {
-        return continents.stream().flatMap(s -> s.getCountries().stream()).filter(s -> s.getName().equalsIgnoreCase(country)).findFirst();
+        return continents.isPresent() ? continents.get().stream().flatMap(s -> s.getCountries().stream()).filter(s -> s.getName().equalsIgnoreCase(country)).findFirst() : null;
     }
 }

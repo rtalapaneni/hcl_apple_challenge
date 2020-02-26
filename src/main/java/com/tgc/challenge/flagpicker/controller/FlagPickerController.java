@@ -3,7 +3,10 @@ package com.tgc.challenge.flagpicker.controller;
 import com.tgc.challenge.flagpicker.dto.ContinetDTO;
 import com.tgc.challenge.flagpicker.dto.CountryDTO;
 import com.tgc.challenge.flagpicker.service.FlagPickerService;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,47 +20,70 @@ public class FlagPickerController {
 
     @Autowired
     private FlagPickerService service;
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @GetMapping("continents")
-    public @ResponseBody List<ContinetDTO> getContinents() {
-        return service.getAllContinents();
+    public @ResponseBody
+    ResponseEntity<List<ContinetDTO>> getContinents() {
+        return buildResponseEntity(service.getAllContinents());
     }
 
     @GetMapping("continents/{continent}")
-    public @ResponseBody ContinetDTO getContinents(@PathVariable String continent) {
+    public @ResponseBody
+    ResponseEntity<ContinetDTO> getContinents(@PathVariable String continent) {
+        meterRegistry.counter("count.continent." + continent).increment(1);
         Optional<ContinetDTO> result = service.getContinent(continent);
-        return result.isPresent() ? result.get() : null;
+        return buildResponseEntity(result);
     }
 
     @GetMapping("continents/{continent}/countries")
-    public @ResponseBody List<CountryDTO> getContinentCountries(@PathVariable String continent) {
-        return service.getContinentCountries(continent);
+    public @ResponseBody
+    ResponseEntity<List<CountryDTO>> getContinentCountries(@PathVariable String continent) {
+        return buildResponseEntity(service.getContinentCountries(continent));
     }
 
     @GetMapping("countries")
-    public @ResponseBody List<CountryDTO> getCountries() {
-        return service.getAllCountries();
+    public @ResponseBody
+    ResponseEntity<List<CountryDTO>> getCountries() {
+        return buildResponseEntity(service.getAllCountries());
     }
 
     @PostMapping(value = "countries", consumes = "application/json", produces = "application/json")
-    public @ResponseBody List<CountryDTO> getCountries(@RequestBody List<String> countries) {
-        return service.findCountries(countries);
+    public @ResponseBody
+    ResponseEntity<List<CountryDTO>> getCountries(@RequestBody List<String> countries) {
+        return buildResponseEntity(service.findCountries(countries));
     }
 
     @PostMapping(value = "countries/flags", consumes = "application/json", produces = "application/json")
-    public @ResponseBody List<String> findCountryFlags(@RequestBody List<String> countries) {
-        return service.findCountryFlags(countries);
+    public @ResponseBody
+    ResponseEntity<List<String>> findCountryFlags(@RequestBody List<String> countries) {
+        return buildResponseEntity(service.findCountryFlags(countries));
     }
 
     @GetMapping("countries/{country}")
-    public @ResponseBody CountryDTO getCountries(@PathVariable String country) {
+    public @ResponseBody
+    ResponseEntity<CountryDTO> getCountries(@PathVariable String country) {
         Optional<CountryDTO> result = service.getCountry(country);
-        return result.isPresent() ? result.get() : null;
+        return buildResponseEntity(result);
     }
 
     @GetMapping("countries/{country}/flag")
-    public String getCountryFlag(@PathVariable String country) {
+    public ResponseEntity<String> getCountryFlag(@PathVariable String country) {
+        meterRegistry.counter("count.flag.country." + country).increment(1);
         Optional<CountryDTO> result = service.getCountry(country);
-        return result.isPresent() ? result.get().getFlag() : null;
+        return buildResponseEntity(result.isPresent() ? Optional.of(result.get().getFlag()) : Optional.empty());
+    }
+
+    /**
+     * Creates the response entity for provided data
+     * Gives HTTP status OK, if data is available else gives status NO_CONTENT
+     *
+     * @param data
+     * @param <T>
+     * @return
+     */
+    private <T> ResponseEntity<T> buildResponseEntity(Optional<T> data) {
+        return data.isPresent() ? new ResponseEntity<T>(data.get(), HttpStatus.OK) : new ResponseEntity<T>(HttpStatus.NO_CONTENT);
     }
 }
