@@ -26,13 +26,14 @@ public class FlagPickerController {
     @GetMapping("continents")
     public @ResponseBody
     ResponseEntity<List<ContinetDTO>> getContinents() {
+        meterRegistry.counter("count.continents").increment(1);
         return buildResponseEntity(service.getAllContinents());
     }
 
     @GetMapping("continents/{continent}")
     public @ResponseBody
     ResponseEntity<ContinetDTO> getContinents(@PathVariable String continent) {
-        meterRegistry.counter("count.continent." + continent).increment(1);
+        meterRegistry.counter("count.continents." + continent).increment(1);
         Optional<ContinetDTO> result = service.getContinent(continent);
         return buildResponseEntity(result);
     }
@@ -40,37 +41,42 @@ public class FlagPickerController {
     @GetMapping("continents/{continent}/countries")
     public @ResponseBody
     ResponseEntity<List<CountryDTO>> getContinentCountries(@PathVariable String continent) {
+        meterRegistry.counter("count.continents."+continent+"countries").increment(1);
         return buildResponseEntity(service.getContinentCountries(continent));
     }
 
     @GetMapping("countries")
     public @ResponseBody
     ResponseEntity<List<CountryDTO>> getCountries() {
+        meterRegistry.counter("count.countries").increment(1);
         return buildResponseEntity(service.getAllCountries());
     }
 
     @PostMapping(value = "countries", consumes = "application/json", produces = "application/json")
     public @ResponseBody
     ResponseEntity<List<CountryDTO>> getCountries(@RequestBody List<String> countries) {
+        meterRegistry.counter("count.countries.search").increment(1);
         return buildResponseEntity(service.findCountries(countries));
     }
 
     @PostMapping(value = "countries/flags", consumes = "application/json", produces = "application/json")
     public @ResponseBody
     ResponseEntity<List<String>> findCountryFlags(@RequestBody List<String> countries) {
+        meterRegistry.counter("count.countries.flags").increment(1);
         return buildResponseEntity(service.findCountryFlags(countries));
     }
 
     @GetMapping("countries/{country}")
     public @ResponseBody
     ResponseEntity<CountryDTO> getCountries(@PathVariable String country) {
+        meterRegistry.counter("count.countries."+country).increment(1);
         Optional<CountryDTO> result = service.getCountry(country);
         return buildResponseEntity(result);
     }
 
     @GetMapping("countries/{country}/flag")
     public ResponseEntity<String> getCountryFlag(@PathVariable String country) {
-        meterRegistry.counter("count.flag.country." + country).increment(1);
+        meterRegistry.counter("count.countries." + country +".flag").increment(1);
         Optional<CountryDTO> result = service.getCountry(country);
         return buildResponseEntity(result.isPresent() ? Optional.of(result.get().getFlag()) : Optional.empty());
     }
