@@ -86,7 +86,7 @@ public class FlagPickerService {
      */
     public Optional<List<CountryDTO>> findCountries(List<String> countries) {
         Optional<List<Country>> countryEntities = repository.findCountries(countries);
-        List<CountryDTO> countryDTOs = countryEntities.isPresent() ? mapper.map(countryEntities, countryDTOTypeRef) : null;
+        List<CountryDTO> countryDTOs = countryEntities.isPresent() ? mapper.map(countryEntities.get(), countryDTOTypeRef) : null;
         return CollectionUtils.isEmpty(countryDTOs) ? Optional.empty() : Optional.of(countryDTOs);
     }
 
