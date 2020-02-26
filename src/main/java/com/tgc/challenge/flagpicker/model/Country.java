@@ -1,11 +1,20 @@
 package com.tgc.challenge.flagpicker.model;
 
+import javax.persistence.*;
+
 /**
  * Country object with details of the name and flag
  */
+@Entity
 public class Country {
+    @Id
     private String name;
+    @Column
     private String flag;
+
+    @ManyToOne
+    @JoinColumn
+    private Continet continet;
 
     /**
      * Default constructor
@@ -52,5 +61,21 @@ public class Country {
      */
     public void setFlag(String flag) {
         this.flag = flag;
+    }
+
+    /**
+     * Get continent associated to country
+     * @return
+     */
+    public Continet getContinet() {
+        return continet;
+    }
+
+    /**
+     * Set continent of the country
+     * @param continet
+     */
+    public void setContinet(Continet continet) {
+        this.continet = continet;
     }
 }

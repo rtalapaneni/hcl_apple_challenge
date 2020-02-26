@@ -29,9 +29,10 @@ public class JSONFlagPickerRepository {
 
     @Value("classpath:${location.continent.json}")
     private Resource jsonFileResource;
-
     @Autowired
     private ObjectMapper mapper;
+    @Autowired
+    private FlagPickerRepository repository;
 
     private Optional<List<Continet>> continents = Optional.empty();
 
@@ -43,6 +44,10 @@ public class JSONFlagPickerRepository {
     public void init() throws IOException {
         List<Continet> data = mapper.readValue(jsonFileResource.getURL(), new TypeReference<List<Continet>>() {});
         continents = CollectionUtils.isEmpty(data) ? Optional.empty() : Optional.of(data);
+
+        //data.stream().forEach(s -> s.getCountries().forEach(c -> c.setContinet(s)));
+        //repository.saveAll(data);
+
     }
 
     /**

@@ -1,9 +1,15 @@
 package com.tgc.challenge.flagpicker.model;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.util.List;
-
+@Entity
 public class Continet {
+    @Id
     private String continent;
+    @OneToMany(mappedBy = "continet", cascade = CascadeType.ALL)
     private List<Country> countries;
 
     /**
