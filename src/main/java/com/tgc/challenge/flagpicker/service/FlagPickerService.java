@@ -5,6 +5,7 @@ import com.tgc.challenge.flagpicker.dto.ContinetDTO;
 import com.tgc.challenge.flagpicker.dto.CountryDTO;
 import com.tgc.challenge.flagpicker.model.Continet;
 import com.tgc.challenge.flagpicker.model.Country;
+import com.tgc.challenge.flagpicker.repository.FlagPickerRepository;
 import com.tgc.challenge.flagpicker.repository.JSONFlagPickerRepository;
 import org.graalvm.compiler.nodes.calc.IntegerDivRemNode;
 import org.modelmapper.ModelMapper;
@@ -28,6 +29,9 @@ public class FlagPickerService {
     @Autowired
     private JSONFlagPickerRepository repository;
 
+    @Autowired
+    private FlagPickerRepository dbRepository;
+
     private Type continentDTOTypeRef = new TypeReference<List<ContinetDTO>>() {}.getType();
     private Type countryDTOTypeRef = new TypeReference<List<CountryDTO>>() {}.getType();
 
@@ -37,6 +41,18 @@ public class FlagPickerService {
      * @return
      */
     public Optional<List<ContinetDTO>> getAllContinents() {
+        List<Continet> continentsEntityData = dbRepository.findAll();
+        Optional<List<Continet>> continentsEntity = continentsEntityData == null ? Optional.empty() : Optional.of(continentsEntityData);
+        List<ContinetDTO> continentsDTO = continentsEntity.isPresent() ? mapper.map(continentsEntity.get(), continentDTOTypeRef) : null;
+        return CollectionUtils.isEmpty(continentsDTO) ? Optional.empty() : Optional.of(continentsDTO);
+    }
+
+    /**
+     * Fetches all the continents
+     *
+     * @return
+     */
+    public Optional<List<ContinetDTO>> getAllContinentsJSON() {
         Optional<List<Continet>> continentsEntity = repository.getAllContinents();
         List<ContinetDTO> continentsDTO = continentsEntity.isPresent() ? mapper.map(continentsEntity.get(), continentDTOTypeRef) : null;
         return CollectionUtils.isEmpty(continentsDTO) ? Optional.empty() : Optional.of(continentsDTO);
